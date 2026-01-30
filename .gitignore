@@ -1,0 +1,12 @@
+.idea
+.vscode
+.direnv
+
+debug/
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+result
+result-*

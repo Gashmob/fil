@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+cd "$ROOT_DIR" || exit 1
+
+rm -f CONTRIBUTORS.txt
+
+{
+  echo '# List of all contributors';
+  echo '#';
+  echo '# Generated from `git log --pretty=format:"%an <%ae>" | sort -uf`';
+  echo '#';
+  echo '# Please keep this list ordered alphabetically';
+} >> CONTRIBUTORS.txt
+
+git log --pretty=format:"%an <%ae>" | sort -uf >> CONTRIBUTORS.txt

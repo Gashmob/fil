@@ -1,0 +1,6 @@
+# List of all contributors
+#
+# Generated from `git log --pretty=format:"%an <%ae>" | sort -uf`
+#
+# Please keep this list ordered alphabetically
+Kevin Traini <kevin@ktraini.com>
