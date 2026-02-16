@@ -29,6 +29,7 @@
 
           packages = with pkgs.${system}; [
             git
+            cargo
             (import ./tools/nix/treefmt.nix {
               inherit treefmt-nix;
               pkgs = pkgs.${system};
