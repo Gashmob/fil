@@ -24,12 +24,12 @@
     in
     {
       devShells = eachSystem (system: {
-        default = pkgs.${system}.mkShellNoCC {
+        default = pkgs.${system}.mkShell {
           name = "fil-development-environment";
 
           packages = with pkgs.${system}; [
             git
-            cargo
+            rustup
             (import ./tools/nix/treefmt.nix {
               inherit treefmt-nix;
               pkgs = pkgs.${system};

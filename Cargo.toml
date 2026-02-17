@@ -1,6 +1,17 @@
 [package]
 name = "fil"
+description = "Main tool for fil language"
+keywords = ["fil", "compiler"]
+categories = ["compilers"]
+homepage = "https://github.com/Gashmob/fil"
+repository = "https://github.com/Gashmob/fil"
+readme = "README.md"
+license = "GPL-2.0-or-later"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+clap = { version = "4.5.58", features = ["derive", "wrap_help", "string", "cargo"] }
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"

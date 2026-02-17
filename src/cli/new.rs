@@ -15,10 +15,15 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use std::env;
+use clap::Args;
 
-mod cli;
-
-fn main() {
-    cli::parse(env::args().collect());
+#[derive(Args)]
+pub struct CommandNew {
+    #[arg(
+        short,
+        long,
+        help = "Name of the package",
+        long_help = "Name of the package. If '.' is given, will initialize the package in current directory and use its name for package name"
+    )]
+    pub name: Option<String>,
 }
