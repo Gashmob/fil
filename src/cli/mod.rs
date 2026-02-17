@@ -23,6 +23,7 @@ mod test;
 use clap::builder::Styles;
 use clap::builder::styling::{AnsiColor, Style};
 use clap::{Args, FromArgMatches, Parser, Subcommand, crate_name};
+use std::error::Error;
 
 #[derive(Parser)]
 #[command(name = crate_name!(), version, about)]
@@ -70,4 +71,15 @@ pub fn parse(args: Vec<String>) -> Cli {
     Cli::from_arg_matches(&matches)
         .map_err(|err| err.exit())
         .unwrap()
+}
+
+pub fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
+    if let Some(ref command) = cli.command {
+        match command {
+            Command::New(n) => new::run(&cli, &n),
+            Command::Build(b) => build::run(&cli, &b),
+        }
+    } else {
+        Ok(())
+    }
 }

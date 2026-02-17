@@ -15,7 +15,9 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+use crate::cli::Cli;
 use clap::Args;
+use std::error::Error;
 
 #[derive(Args)]
 pub struct CommandNew {
@@ -26,4 +28,8 @@ pub struct CommandNew {
         long_help = "Name of the package. If '.' is given, will initialize the package in current directory and use its name for package name"
     )]
     pub name: Option<String>,
+}
+
+pub fn run(_cli: &Cli, _command: &CommandNew) -> Result<(), Box<dyn Error>> {
+    Ok(())
 }

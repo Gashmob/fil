@@ -16,9 +16,10 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use std::env;
+use std::error::Error;
 
 mod cli;
 
-fn main() {
-    cli::parse(env::args().collect());
+fn main() -> Result<(), Box<dyn Error>> {
+    cli::run(cli::parse(env::args().collect()))
 }

@@ -15,7 +15,9 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+use crate::cli::Cli;
 use clap::Args;
+use std::error::Error;
 
 #[derive(Args)]
 pub struct CommandBuild {
@@ -26,4 +28,8 @@ pub struct CommandBuild {
         help = "Build destination directory"
     )]
     pub out_dir: Option<String>,
+}
+
+pub fn run(_cli: &Cli, _command: &CommandBuild) -> Result<(), Box<dyn Error>> {
+    Ok(())
 }
