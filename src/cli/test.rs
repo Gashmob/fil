@@ -88,17 +88,18 @@ mod new {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn it_returns_ok() {
+    fn it_returns_err() {
+        let result = new::run(
+            &Cli {
+                config: "".to_string(),
+                command: None,
+            },
+            &CommandNew { name: None },
+        );
+        assert_eq!(true, result.is_err());
         assert_eq!(
-            true,
-            new::run(
-                &Cli {
-                    config: "".to_string(),
-                    command: None
-                },
-                &CommandNew { name: None }
-            )
-            .is_ok()
+            "new command is not yet implemented",
+            result.unwrap_err().to_string()
         );
     }
 }
@@ -109,17 +110,18 @@ mod build {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn it_returns_ok() {
+    fn it_returns_err() {
+        let result = build::run(
+            &Cli {
+                config: "".to_string(),
+                command: None,
+            },
+            &CommandBuild { out_dir: None },
+        );
+        assert_eq!(true, result.is_err());
         assert_eq!(
-            true,
-            build::run(
-                &Cli {
-                    config: "".to_string(),
-                    command: None
-                },
-                &CommandBuild { out_dir: None }
-            )
-            .is_ok()
+            "build command is not yet implemented",
+            result.unwrap_err().to_string()
         );
     }
 }

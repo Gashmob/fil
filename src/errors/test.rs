@@ -15,22 +15,13 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::cli::Cli;
 use crate::errors::NotImplementedError;
-use clap::Args;
-use std::error::Error;
+use pretty_assertions::assert_eq;
 
-#[derive(Args)]
-pub struct CommandNew {
-    #[arg(
-        short,
-        long,
-        help = "Name of the package",
-        long_help = "Name of the package. If '.' is given, will initialize the package in current directory and use its name for package name"
-    )]
-    pub name: Option<String>,
-}
-
-pub fn run(_cli: &Cli, _command: &CommandNew) -> Result<(), Box<dyn Error>> {
-    Err(Box::new(NotImplementedError::new("new command")))
+#[test]
+fn it_tells_feature_is_not_implemented() {
+    assert_eq!(
+        "foo is not yet implemented",
+        NotImplementedError::new("foo").to_string()
+    );
 }

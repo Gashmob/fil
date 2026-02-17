@@ -15,22 +15,29 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::cli::Cli;
-use crate::errors::NotImplementedError;
-use clap::Args;
+#[cfg(test)]
+mod test;
+
 use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Args)]
-pub struct CommandNew {
-    #[arg(
-        short,
-        long,
-        help = "Name of the package",
-        long_help = "Name of the package. If '.' is given, will initialize the package in current directory and use its name for package name"
-    )]
-    pub name: Option<String>,
+#[derive(Debug)]
+pub struct NotImplementedError {
+    feature_name: String,
 }
 
-pub fn run(_cli: &Cli, _command: &CommandNew) -> Result<(), Box<dyn Error>> {
-    Err(Box::new(NotImplementedError::new("new command")))
+impl NotImplementedError {
+    pub fn new(feature_name: &str) -> NotImplementedError {
+        NotImplementedError {
+            feature_name: feature_name.to_string(),
+        }
+    }
 }
+
+impl Display for NotImplementedError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} is not yet implemented", self.feature_name)
+    }
+}
+
+impl Error for NotImplementedError {}

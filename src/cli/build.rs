@@ -16,6 +16,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::cli::Cli;
+use crate::errors::NotImplementedError;
 use clap::Args;
 use std::error::Error;
 
@@ -31,5 +32,5 @@ pub struct CommandBuild {
 }
 
 pub fn run(_cli: &Cli, _command: &CommandBuild) -> Result<(), Box<dyn Error>> {
-    Ok(())
+    Err(Box::new(NotImplementedError::new("build command")))
 }
