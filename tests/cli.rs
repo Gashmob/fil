@@ -18,12 +18,35 @@
 mod common;
 
 #[test]
+fn exec_fil_nothing() {
+    let output = common::exec_fil(vec![]);
+    pretty_assertions::assert_eq!(
+        "Main tool for fil language
+
+Usage: fil [OPTIONS] <COMMAND>
+
+Commands:
+  new    Initialize a new package
+  build  Build the package
+  help   Print this message or the help of the given subcommand(s)
+
+Options:
+  -c, --config <CONFIG>  Path to the package configuration file [default: package.toml]
+  -h, --help             Print help
+  -V, --version          Print version
+",
+        output.stderr
+    );
+    pretty_assertions::assert_eq!(2, output.status.code().unwrap());
+}
+
+#[test]
 fn exec_fil_help() {
     let output = common::exec_fil(vec!["help"]);
     pretty_assertions::assert_eq!(
         "Main tool for fil language
 
-Usage: fil [OPTIONS] [COMMAND]
+Usage: fil [OPTIONS] <COMMAND>
 
 Commands:
   new    Initialize a new package

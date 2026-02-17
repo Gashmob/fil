@@ -37,7 +37,7 @@ pub struct Cli {
     config: String,
 
     #[command(subcommand)]
-    command: Option<Command>,
+    command: Command,
 }
 
 #[derive(Subcommand)]
@@ -74,12 +74,8 @@ pub fn parse(args: Vec<String>) -> Cli {
 }
 
 pub fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
-    if let Some(ref command) = cli.command {
-        match command {
-            Command::New(n) => new::run(&cli, &n),
-            Command::Build(b) => build::run(&cli, &b),
-        }
-    } else {
-        Ok(())
+    match &cli.command {
+        Command::New(n) => new::run(&cli, n),
+        Command::Build(b) => build::run(&cli, b),
     }
 }

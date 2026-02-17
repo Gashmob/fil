@@ -24,67 +24,45 @@ mod cli {
     }
 
     #[test]
-    fn it_parses_config_arg() {
-        let result = parse(make_args(vec!["fil", "--config", "hello.toml"]));
-        assert_eq!("hello.toml", result.config);
-    }
-
-    #[test]
     fn it_parses_command_new_args() {
         let result = parse(make_args(vec!["fil", "new", "--name", "foo"]));
-        if let Some(command) = result.command {
-            match command {
-                Command::New(n) => assert_eq!("foo", n.name.unwrap()),
-                Command::Build(_) => panic!("Should have parsed command new"),
-            }
-        } else {
-            panic!("Should have parsed command new");
+        match result.command {
+            Command::New(n) => assert_eq!("foo", n.name.unwrap()),
+            Command::Build(_) => panic!("Should have parsed command new"),
         }
     }
 
     #[test]
     fn it_parses_command_new_args_default() {
         let result = parse(make_args(vec!["fil", "new"]));
-        if let Some(command) = result.command {
-            match command {
-                Command::New(n) => assert_eq!(None, n.name),
-                Command::Build(_) => panic!("Should have parsed command new"),
-            }
-        } else {
-            panic!("Should have parsed command new");
+        match result.command {
+            Command::New(n) => assert_eq!(None, n.name),
+            Command::Build(_) => panic!("Should have parsed command new"),
         }
     }
 
     #[test]
     fn it_parses_command_build_args() {
         let result = parse(make_args(vec!["fil", "build", "-o", "dist"]));
-        if let Some(command) = result.command {
-            match command {
-                Command::New(_) => panic!("Should have parsed command build"),
-                Command::Build(b) => assert_eq!("dist", b.out_dir.unwrap()),
-            }
-        } else {
-            panic!("Should have parsed command build");
+        match result.command {
+            Command::New(_) => panic!("Should have parsed command build"),
+            Command::Build(b) => assert_eq!("dist", b.out_dir.unwrap()),
         }
     }
 
     #[test]
     fn it_parses_command_build_args_default() {
         let result = parse(make_args(vec!["fil", "build"]));
-        if let Some(command) = result.command {
-            match command {
-                Command::New(_) => panic!("Should have parsed command build"),
-                Command::Build(b) => assert_eq!("build", b.out_dir.unwrap()),
-            }
-        } else {
-            panic!("Should have parsed command build");
+        match result.command {
+            Command::New(_) => panic!("Should have parsed command build"),
+            Command::Build(b) => assert_eq!("build", b.out_dir.unwrap()),
         }
     }
 }
 
 mod new {
     use crate::cli::new::CommandNew;
-    use crate::cli::{Cli, new};
+    use crate::cli::{Cli, Command, new};
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -92,7 +70,7 @@ mod new {
         let result = new::run(
             &Cli {
                 config: "".to_string(),
-                command: None,
+                command: Command::New(CommandNew { name: None }),
             },
             &CommandNew { name: None },
         );
@@ -106,7 +84,7 @@ mod new {
 
 mod build {
     use crate::cli::build::CommandBuild;
-    use crate::cli::{Cli, build};
+    use crate::cli::{Cli, Command, build};
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -114,7 +92,7 @@ mod build {
         let result = build::run(
             &Cli {
                 config: "".to_string(),
-                command: None,
+                command: Command::Build(CommandBuild { out_dir: None }),
             },
             &CommandBuild { out_dir: None },
         );

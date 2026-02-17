@@ -24,8 +24,7 @@ pub struct FormattedOutput {
 }
 
 pub fn exec_fil(args: Vec<&str>) -> FormattedOutput {
-    let output = Command::new("cargo")
-        .args(vec!["run", "--"])
+    let output = Command::new("./target/debug/fil")
         .args(args)
         .output()
         .expect("Failed to execute process");
