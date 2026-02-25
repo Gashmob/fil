@@ -21,8 +21,15 @@
     let
       eachSystem = nixpkgs.lib.genAttrs (import systems);
       pkgs = eachSystem (system: import nixpkgs { inherit system; });
+
+      fil-package = eachSystem (system: pkgs.${system}.callPackage ./fil.nix { });
     in
     {
+      packages = eachSystem (system: {
+        fil = fil-package.${system};
+        default = fil-package.${system};
+      });
+
       devShells = eachSystem (system: {
         default = pkgs.${system}.mkShell {
           name = "fil-development-environment";
