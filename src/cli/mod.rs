@@ -20,10 +20,10 @@ mod new;
 #[cfg(test)]
 mod test;
 
+use crate::errors::Result;
 use clap::builder::Styles;
 use clap::builder::styling::{AnsiColor, Style};
 use clap::{Args, FromArgMatches, Parser, Subcommand, crate_name};
-use std::error::Error;
 
 #[derive(Parser)]
 #[command(name = crate_name!(), version, about)]
@@ -42,10 +42,10 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Command {
-    #[command(about = "Initialize a new package")]
+    #[command(about = "Initialize a new project")]
     New(new::CommandNew),
 
-    #[command(about = "Build the package")]
+    #[command(about = "Build the project")]
     Build(build::CommandBuild),
 }
 
@@ -73,9 +73,9 @@ pub fn parse(args: Vec<String>) -> Cli {
         .unwrap()
 }
 
-pub fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
+pub fn run(cli: Cli) -> Result<()> {
     match &cli.command {
-        Command::New(n) => new::run(&cli, n),
+        Command::New(n) => new::run(&cli, n, &vfs::PhysicalFS::new("/").into()),
         Command::Build(b) => build::run(&cli, b),
     }
 }

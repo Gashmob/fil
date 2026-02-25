@@ -26,8 +26,8 @@ fn exec_fil_nothing() {
 Usage: fil [OPTIONS] <COMMAND>
 
 Commands:
-  new    Initialize a new package
-  build  Build the package
+  new    Initialize a new project
+  build  Build the project
   help   Print this message or the help of the given subcommand(s)
 
 Options:
@@ -49,8 +49,8 @@ fn exec_fil_help() {
 Usage: fil [OPTIONS] <COMMAND>
 
 Commands:
-  new    Initialize a new package
-  build  Build the package
+  new    Initialize a new project
+  build  Build the project
   help   Print this message or the help of the given subcommand(s)
 
 Options:
@@ -78,14 +78,19 @@ fn exec_fil_version() {
 fn exec_fil_help_new() {
     let output = common::exec_fil(vec!["help", "new"]);
     pretty_assertions::assert_eq!(
-        "Initialize a new package
+        "Initialize a new project
 
 Usage: fil new [OPTIONS]
 
 Options:
   -n, --name <NAME>
-          Name of the package. If '.' is given, will initialize the package in current directory and
-          use its name for package name
+          Name of the project. Can be be a path, in this case the basename of it will be used for
+          the project name.
+
+  -g, --git <GIT>
+          Call git init in the project?
+          
+          [possible values: true, false]
 
   -h, --help
           Print help (see a summary with '-h')
@@ -99,7 +104,7 @@ Options:
 fn exec_fil_help_build() {
     let output = common::exec_fil(vec!["help", "build"]);
     pretty_assertions::assert_eq!(
-        "Build the package
+        "Build the project
 
 Usage: fil build [OPTIONS]
 

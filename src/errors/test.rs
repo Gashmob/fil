@@ -15,8 +15,16 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::errors::NotImplementedError;
+use crate::errors::{GenericError, NotImplementedError};
 use pretty_assertions::assert_eq;
+
+#[test]
+fn it_stores_message() {
+    assert_eq!(
+        "My error message",
+        GenericError::new("My error message").to_string()
+    );
+}
 
 #[test]
 fn it_tells_feature_is_not_implemented() {

@@ -17,8 +17,8 @@
 
 use crate::cli::Cli;
 use crate::errors::NotImplementedError;
+use crate::errors::Result;
 use clap::Args;
-use std::error::Error;
 
 #[derive(Args)]
 pub struct CommandBuild {
@@ -31,6 +31,6 @@ pub struct CommandBuild {
     pub out_dir: Option<String>,
 }
 
-pub fn run(_cli: &Cli, _command: &CommandBuild) -> Result<(), Box<dyn Error>> {
-    Err(Box::new(NotImplementedError::new("build command")))
+pub fn run(_cli: &Cli, _command: &CommandBuild) -> Result<()> {
+    Err(NotImplementedError::new("build command").into())
 }

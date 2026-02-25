@@ -18,26 +18,49 @@
 #[cfg(test)]
 mod test;
 
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
+use std::error;
+use std::fmt;
 
-#[derive(Debug)]
+pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+
+#[derive(Debug, Clone)]
+pub struct GenericError {
+    message: String,
+}
+
+impl GenericError {
+    pub fn new(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
+    }
+}
+
+impl fmt::Display for GenericError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl error::Error for GenericError {}
+
+#[derive(Debug, Clone)]
 pub struct NotImplementedError {
     feature_name: String,
 }
 
 impl NotImplementedError {
-    pub fn new(feature_name: &str) -> NotImplementedError {
-        NotImplementedError {
+    pub fn new(feature_name: &str) -> Self {
+        Self {
             feature_name: feature_name.to_string(),
         }
     }
 }
 
-impl Display for NotImplementedError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for NotImplementedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} is not yet implemented", self.feature_name)
     }
 }
 
-impl Error for NotImplementedError {}
+impl error::Error for NotImplementedError {}

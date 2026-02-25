@@ -64,20 +64,56 @@ mod new {
     use crate::cli::new::CommandNew;
     use crate::cli::{Cli, Command, new};
     use pretty_assertions::assert_eq;
+    use std::io::Read;
+    use vfs::{MemoryFS, VfsPath};
 
-    #[test]
-    fn it_returns_err() {
+    fn random_name() -> String {
+        format!("project_{}", rand::random::<u64>())
+    }
+
+    fn run_new(path: &VfsPath) {
         let result = new::run(
             &Cli {
                 config: "".to_string(),
-                command: Command::New(CommandNew { name: None }),
+                command: Command::New(CommandNew {
+                    name: Some(path.as_str().to_string()),
+                    git: Some(false),
+                }),
             },
-            &CommandNew { name: None },
+            &CommandNew {
+                name: Some(path.as_str().to_string()),
+                git: Some(false),
+            },
+            &path,
         );
-        assert_eq!(true, result.is_err());
+        assert_eq!(true, result.is_ok());
+    }
+
+    #[test]
+    fn it_creates_project_dir() {
+        let root = VfsPath::new(MemoryFS::new());
+        let name = random_name();
+        let path = root.join(format!("/tmp/{}", name)).unwrap();
+        run_new(&path);
+
+        assert_eq!(true, path.is_dir().unwrap());
+        let content: Vec<_> = path.read_dir().unwrap().collect();
+        assert_eq!(vec![path.join("package.toml").unwrap()], content);
+        let mut package_content = String::new();
+        println!("{:?}", root);
+        path.join("package.toml")
+            .unwrap()
+            .open_file()
+            .unwrap()
+            .read_to_string(&mut package_content)
+            .unwrap();
         assert_eq!(
-            "new command is not yet implemented",
-            result.unwrap_err().to_string()
+            format!(
+                "[package]
+name = {}",
+                name
+            ),
+            package_content
         );
     }
 }
