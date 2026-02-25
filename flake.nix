@@ -40,6 +40,7 @@
             export ROOT_DIR=$(git rev-parse --show-toplevel)
             export PATH="$PATH:$ROOT_DIR/tools/bin"
 
+            cp "$ROOT_DIR/tools/githooks/pre-commit.sh" "$ROOT_DIR/.git/hooks/pre-commit"
             git config commit.template "$ROOT_DIR/commit-template"
           '';
         };
