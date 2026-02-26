@@ -22,12 +22,19 @@
       eachSystem = nixpkgs.lib.genAttrs (import systems);
       pkgs = eachSystem (system: import nixpkgs { inherit system; });
 
+      fil-version = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package.version;
+
       fil-package = eachSystem (system: pkgs.${system}.callPackage ./fil.nix { });
+      rpm-package = eachSystem (
+        system: pkgs.${system}.callPackage ./tools/package/rpm.nix { fil-version = fil-version; }
+      );
     in
     {
       packages = eachSystem (system: {
         fil = fil-package.${system};
         default = fil-package.${system};
+
+        rpm = rpm-package.${system};
       });
 
       devShells = eachSystem (system: {

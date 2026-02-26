@@ -1,7 +1,7 @@
 name: Package
 on:
   push:
-    branches: ["master"]
+    branches: [ "master" ]
   pull_request:
 jobs:
   nix:
@@ -10,6 +10,18 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: cachix/install-nix-action@0b0e072294b088b73964f1d72dfdac0951439dbd # v31.8.4
       - name: Build nix package
-        run: nix build
+        run: nix build .#fil
       - name: Check build succeed
         run: ${{ github.workspace }}/result/bin/fil --version
+
+  rpm:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: cachix/install-nix-action@0b0e072294b088b73964f1d72dfdac0951439dbd # v31.8.4
+      - name: Build rpm package
+        run: nix build .#rpm
+      - name: Check build succeed
+        run: |
+          sudo rpm -ivh --nodeps "$(ls ${{ github.workspace }}/result/*.rpm)"
+          fil --version
