@@ -9,3 +9,6 @@ target/
 
 result
 result-*
+
+pkg
+fil-*.tar.zst

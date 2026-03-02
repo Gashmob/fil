@@ -18,6 +18,8 @@ git pull
 
 In [CHANGELOG.md](../CHANGELOG.md), replace the `[Unreleased]` header by `vX.Y.Z` and create a new `[Unreleased]` section above.
 
+Also update the version in [PKGBUILD](../PKGBUILD).
+
 ## Contributors list
 
 Update the contributors list with `generate-contributors-list`. If there is new contributors, note who they are and what is their first contribution.
