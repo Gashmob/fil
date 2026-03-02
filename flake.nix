@@ -26,7 +26,18 @@
 
       fil-package = eachSystem (system: pkgs.${system}.callPackage ./fil.nix { });
       rpm-package = eachSystem (
-        system: pkgs.${system}.callPackage ./tools/package/rpm.nix { fil-version = fil-version; }
+        system:
+        pkgs.${system}.callPackage ./tools/package/rpm.nix {
+          fil = fil-package.${system};
+          fil-version = fil-version;
+        }
+      );
+      deb-package = eachSystem (
+        system:
+        pkgs.${system}.callPackage ./tools/package/deb.nix {
+          fil = fil-package.${system};
+          fil-version = fil-version;
+        }
       );
     in
     {
@@ -35,6 +46,7 @@
         default = fil-package.${system};
 
         rpm = rpm-package.${system};
+        deb = deb-package.${system};
       });
 
       devShells = eachSystem (system: {

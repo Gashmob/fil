@@ -1,0 +1,7 @@
+Package: fil
+Version: %version%
+Architecture: all
+Section: Development
+Maintainer: Kevin Traini <kevin@ktraini.com>
+Description: Main tool for fil language
+Homepage: https://github.com/Gashmob/fil
