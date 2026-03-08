@@ -4,9 +4,11 @@
 
 debug/
 target/
-Cargo.lock
 **/*.rs.bk
 *.pdb
 
 result
 result-*
+
+pkg
+fil-*.tar.zst

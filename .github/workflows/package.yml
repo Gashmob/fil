@@ -1,37 +1,39 @@
-name: Tests
+name: Package
 on:
   push:
-    branches: ["master"]
+    branches: [ "master" ]
   pull_request:
 jobs:
-  treefmt:
+  nix:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: cachix/install-nix-action@0b0e072294b088b73964f1d72dfdac0951439dbd # v31.8.4
-      - name: Check format
-        run: nix develop --command treefmt --ci
+      - name: Build nix package
+        run: nix build .#fil
+      - name: Check build succeed
+        run: ${{ github.workspace }}/result/bin/fil --version
 
-  cargo-test:
+  rpm:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: cachix/install-nix-action@0b0e072294b088b73964f1d72dfdac0951439dbd # v31.8.4
-      - name: Run tests
-        run: nix develop --command cargo test
+      - name: Build rpm package
+        run: nix build .#rpm
+      - name: Check build succeed
+        run: |
+          sudo rpm -ivh --nodeps "$(ls ${{ github.workspace }}/result/*.rpm)"
+          fil --version
 
-  cargo-build:
+  deb:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: cachix/install-nix-action@0b0e072294b088b73964f1d72dfdac0951439dbd # v31.8.4
-      - name: Build
-        run: nix develop --command cargo build --release
-
-  cargo-check:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: cachix/install-nix-action@0b0e072294b088b73964f1d72dfdac0951439dbd # v31.8.4
-      - name: Check
-        run: nix develop --command cargo check
+      - name: Build deb package
+        run: nix build .#deb
+      - name: Check build succeed
+        run: |
+          sudo dpkg -i '${{ github.workspace }}/result/fil.deb'
+          fil --version
