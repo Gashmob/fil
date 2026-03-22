@@ -15,9 +15,6 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-#[cfg(test)]
-mod test;
-
 use std::error;
 use std::fmt;
 
@@ -64,3 +61,25 @@ impl fmt::Display for NotImplementedError {
 }
 
 impl error::Error for NotImplementedError {}
+
+#[cfg(test)]
+mod test {
+    use crate::errors::{GenericError, NotImplementedError};
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn it_stores_message() {
+        assert_eq!(
+            "My error message",
+            GenericError::new("My error message").to_string()
+        );
+    }
+
+    #[test]
+    fn it_tells_feature_is_not_implemented() {
+        assert_eq!(
+            "foo is not yet implemented",
+            NotImplementedError::new("foo").to_string()
+        );
+    }
+}

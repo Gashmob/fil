@@ -17,8 +17,6 @@
 
 mod build;
 mod new;
-#[cfg(test)]
-mod test;
 
 use crate::errors::Result;
 use clap::builder::Styles;
@@ -77,5 +75,51 @@ pub fn run(cli: Cli) -> Result<()> {
     match &cli.command {
         Command::New(n) => new::run(&cli, n, &vfs::PhysicalFS::new("/").into()),
         Command::Build(b) => build::run(&cli, b),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::cli::{Command, parse};
+    use pretty_assertions::assert_eq;
+
+    fn make_args(args: Vec<&str>) -> Vec<String> {
+        args.iter().map(|&arg| arg.parse().unwrap()).collect()
+    }
+
+    #[test]
+    fn it_parses_command_new_args() {
+        let result = parse(make_args(vec!["fil", "new", "--name", "foo"]));
+        match result.command {
+            Command::New(n) => assert_eq!("foo", n.name.unwrap()),
+            Command::Build(_) => panic!("Should have parsed command new"),
+        }
+    }
+
+    #[test]
+    fn it_parses_command_new_args_default() {
+        let result = parse(make_args(vec!["fil", "new"]));
+        match result.command {
+            Command::New(n) => assert_eq!(None, n.name),
+            Command::Build(_) => panic!("Should have parsed command new"),
+        }
+    }
+
+    #[test]
+    fn it_parses_command_build_args() {
+        let result = parse(make_args(vec!["fil", "build", "-o", "dist"]));
+        match result.command {
+            Command::New(_) => panic!("Should have parsed command build"),
+            Command::Build(b) => assert_eq!("dist", b.out_dir.unwrap()),
+        }
+    }
+
+    #[test]
+    fn it_parses_command_build_args_default() {
+        let result = parse(make_args(vec!["fil", "build"]));
+        match result.command {
+            Command::New(_) => panic!("Should have parsed command build"),
+            Command::Build(b) => assert_eq!("build", b.out_dir.unwrap()),
+        }
     }
 }

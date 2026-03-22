@@ -34,3 +34,26 @@ pub struct CommandBuild {
 pub fn run(_cli: &Cli, _command: &CommandBuild) -> Result<()> {
     Err(NotImplementedError::new("build command").into())
 }
+
+#[cfg(test)]
+mod test {
+    use crate::cli::build::CommandBuild;
+    use crate::cli::{Cli, Command, build};
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn it_returns_err() {
+        let result = build::run(
+            &Cli {
+                config: "".to_string(),
+                command: Command::Build(CommandBuild { out_dir: None }),
+            },
+            &CommandBuild { out_dir: None },
+        );
+        assert_eq!(true, result.is_err());
+        assert_eq!(
+            "build command is not yet implemented",
+            result.unwrap_err().to_string()
+        );
+    }
+}
