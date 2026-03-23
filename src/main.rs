@@ -19,6 +19,7 @@ use std::env;
 
 mod cli;
 mod errors;
+mod new;
 
 fn main() -> Result<(), String> {
     cli::run(cli::parse(env::args().collect())).map_err(|err| err.to_string())
