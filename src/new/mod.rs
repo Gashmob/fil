@@ -15,71 +15,74 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::errors::GenericError;
+use crate::fault;
+use crate::fault::Fault;
 use std::process;
+use vfs::VfsPath;
 
-pub fn create_project(
-    name: &String,
-    git: &bool,
-    filesystem: &vfs::path::VfsPath,
-) -> crate::errors::Result<()> {
+pub fn create_project(name: &String, git: &bool, filesystem: &VfsPath) -> fault::Result<()> {
     let name = sanitize_name(name);
-    let path = if name.starts_with("/") {
-        filesystem.root().join(&name)?
-    } else {
+    get_path(&filesystem, &name)
+        .map(|path| (path.clone(), get_name(&name, &path)))
+        .and_then(|(path, name)| check_path_is_empty(&path).map(|_| (path, name)))
+        .and_then(|(path, name)| {
+            path.create_dir_all()
+                .map_err(|error| Fault::from_error(Box::from(error)))
+                .map(|_| (path, name))
+        })
+        .and_then(|(path, name)| init_project(&path, &name).map(|_| path))
+        .and_then(|path| init_git(&git, &path))
+}
+
+fn get_path(filesystem: &VfsPath, name: &String) -> fault::Result<VfsPath> {
+    if name.starts_with("/") {
         filesystem
-            .join(std::env::current_dir()?.to_str().unwrap())?
-            .join(&name)?
-    };
-    let name = if name.contains("/") {
+            .root()
+            .join(&name)
+            .map_err(|error| Fault::from_error(Box::from(error)))
+    } else {
+        std::env::current_dir()
+            .map_err(|error| Fault::from_error(Box::from(error)))
+            .and_then(|current_dir_path| {
+                if let Some(current_dir) = current_dir_path.to_str() {
+                    Ok(String::from(current_dir))
+                } else {
+                    Err(Fault::from_message(""))
+                }
+            })
+            .and_then(|current_dir| {
+                filesystem
+                    .join(current_dir)
+                    .map_err(|error| Fault::from_error(Box::from(error)))
+            })
+            .and_then(|_| {
+                filesystem
+                    .join(&name)
+                    .map_err(|error| Fault::from_error(Box::from(error)))
+            })
+    }
+}
+
+fn get_name(name: &String, path: &VfsPath) -> String {
+    if name.contains("/") {
         path.filename()
     } else {
         name.clone()
-    };
-
-    check_path(&path)
-        .and_then(|_| {
-            path.create_dir_all()
-                .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-        })
-        .and_then(|_| {
-            path.join("package.toml")
-                .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                .and_then(|file| {
-                    file.create_file()
-                        .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                })
-                .and_then(|mut file_stream| {
-                    write!(file_stream, "[package]\nname = {}", name)
-                        .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                })
-        })
-        .and_then(|_| {
-            if *git {
-                process::Command::new("git")
-                    .args(vec!["init", path.as_str()])
-                    .output()
-                    .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                    .and(Ok(()))
-            } else {
-                Ok(())
-            }
-        })
+    }
 }
 
-fn check_path(path: &vfs::path::VfsPath) -> crate::errors::Result<()> {
+fn check_path_is_empty(path: &VfsPath) -> fault::Result<()> {
     path.exists()
-        .map_err(|err| GenericError::new(err.to_string().as_str()).into())
+        .map_err(|error| Fault::from_error(Box::from(error)))
         .and_then(|exists| {
             if exists {
                 path.read_dir()
-                    .map_err(|err| GenericError::new(err.to_string().as_str()).into())
+                    .map_err(|error| Fault::from_error(Box::from(error)))
                     .and_then(|read_dir| {
                         if read_dir.count() > 0 {
-                            Err(GenericError::new(
+                            Err(Fault::from_message(
                                 format!("Directory {} is not empty", path.as_str()).as_str(),
-                            )
-                            .into())
+                            ))
                         } else {
                             Ok(())
                         }
@@ -90,6 +93,31 @@ fn check_path(path: &vfs::path::VfsPath) -> crate::errors::Result<()> {
         })
 }
 
+fn init_project(path: &VfsPath, name: &String) -> fault::Result<()> {
+    path.join("package.toml")
+        .map_err(|error| Fault::from_error(Box::from(error)))
+        .and_then(|file| {
+            file.create_file()
+                .map_err(|error| Fault::from_error(Box::from(error)))
+        })
+        .and_then(|mut file_stream| {
+            write!(file_stream, "[package]\nname = {}", name)
+                .map_err(|error| Fault::from_error(Box::from(error)))
+        })
+}
+
+fn init_git(git: &bool, path: &VfsPath) -> fault::Result<()> {
+    if *git {
+        process::Command::new("git")
+            .args(vec!["init", path.as_str()])
+            .output()
+            .map_err(|error| Fault::from_error(Box::from(error)))
+            .and(Ok(()))
+    } else {
+        Ok(())
+    }
+}
+
 fn sanitize_name(name: &String) -> String {
     let parts: Vec<_> = name.trim().split_whitespace().collect();
     parts.join("-").replace("*", "-")
@@ -97,7 +125,7 @@ fn sanitize_name(name: &String) -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::new::{check_path, sanitize_name};
+    use crate::new::{check_path_is_empty, sanitize_name};
     use pretty_assertions::assert_eq;
     use vfs::{MemoryFS, VfsPath};
 
@@ -108,8 +136,14 @@ mod test {
         root.join("bar").unwrap().create_dir().unwrap();
         root.join("bar/lorem").unwrap().create_file().unwrap();
 
-        assert_eq!(true, check_path(&root.join("foo").unwrap()).is_ok());
-        assert_eq!(true, check_path(&root.join("bar").unwrap()).is_err());
+        assert_eq!(
+            true,
+            check_path_is_empty(&root.join("foo").unwrap()).is_ok()
+        );
+        assert_eq!(
+            true,
+            check_path_is_empty(&root.join("bar").unwrap()).is_err()
+        );
     }
 
     #[test]

@@ -16,9 +16,11 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::cli::Cli;
-use crate::errors::Result;
+use crate::fault;
+use crate::fault::Fault;
 use crate::new::create_project;
 use clap::Args;
+use cliclack::ProgressBar;
 
 #[derive(Args)]
 pub struct CommandNew {
@@ -34,52 +36,58 @@ pub struct CommandNew {
     pub git: Option<bool>,
 }
 
-pub fn run(_cli: &Cli, command: &CommandNew, filesystem: &vfs::path::VfsPath) -> Result<()> {
-    cliclack::intro(console::style(" New project ").on_green().black())?;
+pub fn run(_cli: &Cli, command: &CommandNew, filesystem: &vfs::path::VfsPath) -> fault::Result<()> {
+    cliclack::intro(console::style(" New project ").on_green().black())
+        .and_then(|_| cliclack::log::success("Let's create an awesome project 🤘"))
+        .map_err(|error| Fault::from_error(Box::from(error)))
+        .map(|_| {
+            let spinner = cliclack::spinner();
+            spinner.start("Initializing the project");
+            spinner
+        })
+        .and_then(|spinner| get_name(&command).map(|name| (spinner, name)))
+        .and_then(|(spinner, name)| get_git(&command).map(|git| (spinner, name, git)))
+        .and_then(|(spinner, name, git)| {
+            create_project(&name, &git, &filesystem).map(|_| (spinner, name))
+        })
+        .and_then(|(spinner, name): (ProgressBar, String)| {
+            spinner.stop("Done!");
 
-    cliclack::log::success("Let's create an awesome project 🤘")?;
-
-    let name = get_name(&command)?;
-    let git = get_git(&command)?;
-
-    let spinner = cliclack::spinner();
-    spinner.start("Initializing the project");
-    create_project(&name, &git, &filesystem).and_then(|_| {
-        spinner.stop("Done!");
-
-        cliclack::note(
-            "Project created! 🚀 ",
-            format!(
-                "{}\n{}{}\n",
-                console::style("Next steps:").bold(),
-                if name == "." {
-                    String::new()
-                } else {
-                    console::style(format!("cd {name}\n")).dim().to_string()
-                },
-                "Enjoy!"
-            ),
-        )?;
-
-        cliclack::outro(format!(
-            "Got problems? {}",
-            console::style("https://github.com/Gashmob/fil/issues/new/choose")
-                .yellow()
-                .underlined()
-        ))?;
-        Ok(())
-    })
+            cliclack::note(
+                "Project created! 🚀 ",
+                format!(
+                    "{}\n{}{}\n",
+                    console::style("Next steps:").bold(),
+                    if name == "." {
+                        String::new()
+                    } else {
+                        console::style(format!("cd {name}\n")).dim().to_string()
+                    },
+                    "Enjoy!"
+                ),
+            )
+            .map_err(|error| Fault::from_error(Box::from(error)))
+        })
+        .and_then(|_| {
+            cliclack::outro(format!(
+                "Got problems? {}",
+                console::style("https://github.com/Gashmob/fil/issues/new/choose")
+                    .yellow()
+                    .underlined()
+            ))
+            .map_err(|error| Fault::from_error(Box::from(error)))
+        })
 }
 
-fn get_name(command: &&CommandNew) -> Result<String> {
+fn get_name(command: &CommandNew) -> fault::Result<String> {
     if let Some(given_name) = &command.name {
         cliclack::log::step(format!(
             "Project will be created with name: {}",
             console::style(given_name).bold()
-        ))?;
-        Ok(given_name.clone())
+        ))
+        .map(|_| given_name.clone())
     } else {
-        Ok(cliclack::input("How do you want to call it?")
+        cliclack::input("How do you want to call it?")
             .placeholder("blazing-fast-forward")
             .validate(|input: &String| {
                 if input.is_empty() {
@@ -88,22 +96,26 @@ fn get_name(command: &&CommandNew) -> Result<String> {
                     Ok(())
                 }
             })
-            .interact()?)
+            .interact()
     }
+    .map_err(|error| Fault::from_error(Box::from(error)))
 }
 
-fn get_git(command: &CommandNew) -> Result<bool> {
+fn get_git(command: &CommandNew) -> fault::Result<bool> {
     if let Some(given_git) = command.git {
         if given_git {
             cliclack::log::step(format!(
                 "{} will be called",
                 console::style("git init").bold()
-            ))?;
+            ))
+        } else {
+            Ok(())
         }
-        Ok(given_git.clone())
+        .map(|_| given_git.clone())
     } else {
-        Ok(cliclack::confirm("Do you want to init git?").interact()?)
+        cliclack::confirm("Do you want to init git?").interact()
     }
+    .map_err(|error| Fault::from_error(Box::from(error)))
 }
 
 #[cfg(test)]

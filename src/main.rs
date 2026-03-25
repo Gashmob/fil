@@ -18,7 +18,7 @@
 use std::env;
 
 mod cli;
-mod errors;
+mod fault;
 mod new;
 
 fn main() -> Result<(), String> {

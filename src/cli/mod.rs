@@ -18,7 +18,7 @@
 mod build;
 mod new;
 
-use crate::errors::Result;
+use crate::fault;
 use clap::builder::Styles;
 use clap::builder::styling::{AnsiColor, Style};
 use clap::{Args, FromArgMatches, Parser, Subcommand, crate_name};
@@ -71,7 +71,7 @@ pub fn parse(args: Vec<String>) -> Cli {
         .unwrap()
 }
 
-pub fn run(cli: Cli) -> Result<()> {
+pub fn run(cli: Cli) -> fault::Result<()> {
     match &cli.command {
         Command::New(n) => new::run(&cli, n, &vfs::PhysicalFS::new("/").into()),
         Command::Build(b) => build::run(&cli, b),

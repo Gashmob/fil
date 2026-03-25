@@ -16,8 +16,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::cli::Cli;
-use crate::errors::NotImplementedError;
-use crate::errors::Result;
+use crate::fault;
+use crate::fault::Fault;
 use clap::Args;
 
 #[derive(Args)]
@@ -31,8 +31,8 @@ pub struct CommandBuild {
     pub out_dir: Option<String>,
 }
 
-pub fn run(_cli: &Cli, _command: &CommandBuild) -> Result<()> {
-    Err(NotImplementedError::new("build command").into())
+pub fn run(_cli: &Cli, _command: &CommandBuild) -> fault::Result<()> {
+    Err(Fault::from_message("build command is not yet implemented"))
 }
 
 #[cfg(test)]
