@@ -15,13 +15,11 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use std::env;
-
-mod build;
-mod cli;
-mod fault;
-mod new;
-
-fn main() -> Result<(), String> {
-    cli::run(cli::parse(env::args().collect())).map_err(|err| format!("{err}"))
+fn main() {
+    lalrpop::Configuration::new()
+        .set_in_dir("./src")
+        .set_out_dir("./src")
+        .force_build(true)
+        .process()
+        .unwrap()
 }

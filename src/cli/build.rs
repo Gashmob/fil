@@ -15,9 +15,9 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+use crate::build::build;
 use crate::cli::Cli;
 use crate::fault;
-use crate::fault::Fault;
 use clap::Args;
 
 #[derive(Args)]
@@ -31,29 +31,10 @@ pub struct CommandBuild {
     pub out_dir: Option<String>,
 }
 
-pub fn run(_cli: &Cli, _command: &CommandBuild) -> fault::Result<()> {
-    Err(Fault::from_message("build command is not yet implemented"))
-}
-
-#[cfg(test)]
-mod test {
-    use crate::cli::build::CommandBuild;
-    use crate::cli::{Cli, Command, build};
-    use pretty_assertions::assert_eq;
-
-    #[test]
-    fn it_returns_err() {
-        let result = build::run(
-            &Cli {
-                config: "".to_string(),
-                command: Command::Build(CommandBuild { out_dir: None }),
-            },
-            &CommandBuild { out_dir: None },
-        );
-        assert_eq!(true, result.is_err());
-        assert_eq!(
-            "build command is not yet implemented",
-            result.unwrap_err().to_string()
-        );
-    }
+pub fn run(
+    cli: &Cli,
+    command: &CommandBuild,
+    filesystem: &vfs::path::VfsPath,
+) -> fault::Result<()> {
+    build(cli, command, filesystem)
 }

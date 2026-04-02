@@ -15,13 +15,36 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use std::env;
+use std::fmt::{Debug, Formatter};
 
-mod build;
-mod cli;
-mod fault;
-mod new;
+pub enum Expr {
+    Number(i32),
+    Op(Box<Expr>, Opcode, Box<Expr>),
+}
 
-fn main() -> Result<(), String> {
-    cli::run(cli::parse(env::args().collect())).map_err(|err| format!("{err}"))
+pub enum Opcode {
+    Mul,
+    Div,
+    Add,
+    Sub,
+}
+
+impl Debug for Expr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expr::Number(n) => write!(f, "{n:?}"),
+            Expr::Op(l, op, r) => write!(f, "({l:?} {op:?} {r:?})"),
+        }
+    }
+}
+
+impl Debug for Opcode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Opcode::Mul => write!(f, "*"),
+            Opcode::Div => write!(f, "/"),
+            Opcode::Add => write!(f, "+"),
+            Opcode::Sub => write!(f, "-"),
+        }
+    }
 }

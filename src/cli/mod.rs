@@ -15,7 +15,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-mod build;
+pub mod build;
 mod new;
 
 use crate::fault;
@@ -74,7 +74,7 @@ pub fn parse(args: Vec<String>) -> Cli {
 pub fn run(cli: Cli) -> fault::Result<()> {
     match &cli.command {
         Command::New(n) => new::run(&cli, n, &vfs::PhysicalFS::new("/").into()),
-        Command::Build(b) => build::run(&cli, b),
+        Command::Build(b) => build::run(&cli, b, &vfs::PhysicalFS::new(".").into()),
     }
 }
 

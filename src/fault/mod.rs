@@ -34,7 +34,7 @@ impl Fault {
 
     pub fn from_error(error: Box<dyn error::Error>) -> Self {
         Self {
-            message: Some(error.to_string()),
+            message: None,
             error: Some(error),
         }
     }
@@ -51,8 +51,8 @@ impl fmt::Display for Fault {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match (&self.message, &self.error) {
             (Some(message), None) => write!(f, "{message}"),
-            (Some(message), Some(error)) => write!(f, "{message}: {:?}", error.to_string()),
-            (None, Some(error)) => write!(f, "{}", error.to_string()),
+            (Some(message), Some(error)) => write!(f, "{message}: {error}"),
+            (None, Some(error)) => write!(f, "{error}"),
             _ => write!(f, "Got an unknown fault, please open an issue"),
         }
     }
@@ -86,7 +86,7 @@ mod test {
     #[test]
     fn test_fault_from_error() {
         assert_eq!(
-            "Some stub error: \"Some stub error\"",
+            "Some stub error",
             Fault::from_error(Box::new(ErrorStub {})).to_string()
         )
     }
@@ -94,7 +94,7 @@ mod test {
     #[test]
     fn test_fault_from_error_with_message() {
         assert_eq!(
-            "Oopsie: \"Some stub error\"",
+            "Oopsie: Some stub error",
             Fault::from_error_with_message(Box::new(ErrorStub {}), "Oopsie").to_string()
         )
     }
