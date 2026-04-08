@@ -63,7 +63,7 @@ pub type Result<T> = std::result::Result<T, Fault>;
 #[cfg(test)]
 mod test {
     use crate::fault::Fault;
-    use pretty_assertions::assert_eq;
+    use pretty_assertions::assert_str_eq;
     use std::fmt::Formatter;
     use std::{error, fmt};
 
@@ -80,12 +80,12 @@ mod test {
 
     #[test]
     fn test_fault_from_message() {
-        assert_eq!("Oh snap!", Fault::from_message("Oh snap!").to_string())
+        assert_str_eq!("Oh snap!", Fault::from_message("Oh snap!").to_string())
     }
 
     #[test]
     fn test_fault_from_error() {
-        assert_eq!(
+        assert_str_eq!(
             "Some stub error",
             Fault::from_error(Box::new(ErrorStub {})).to_string()
         )
@@ -93,7 +93,7 @@ mod test {
 
     #[test]
     fn test_fault_from_error_with_message() {
-        assert_eq!(
+        assert_str_eq!(
             "Oopsie: Some stub error",
             Fault::from_error_with_message(Box::new(ErrorStub {}), "Oopsie").to_string()
         )

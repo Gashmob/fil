@@ -122,7 +122,7 @@ fn get_git(command: &CommandNew) -> fault::Result<bool> {
 mod test {
     use crate::cli::new::CommandNew;
     use crate::cli::{Cli, Command, new};
-    use pretty_assertions::assert_eq;
+    use pretty_assertions::{assert_eq, assert_str_eq};
     use std::io::Read;
     use vfs::{MemoryFS, VfsPath};
 
@@ -159,14 +159,13 @@ mod test {
         let content: Vec<_> = path.read_dir().unwrap().collect();
         assert_eq!(vec![path.join("package.toml").unwrap()], content);
         let mut package_content = String::new();
-        println!("{:?}", root);
         path.join("package.toml")
             .unwrap()
             .open_file()
             .unwrap()
             .read_to_string(&mut package_content)
             .unwrap();
-        assert_eq!(
+        assert_str_eq!(
             format!(
                 "[package]
 name = {}",

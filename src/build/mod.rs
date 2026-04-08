@@ -17,8 +17,10 @@
 
 mod ast;
 mod grammar;
+mod parse_error_formatter;
 
 use crate::build::ast::Expr;
+use crate::build::parse_error_formatter::format_parse_error;
 use crate::cli::Cli;
 use crate::cli::build::CommandBuild;
 use crate::fault;
@@ -44,20 +46,20 @@ fn parse_file(main_source_file: &vfs::path::VfsPath) -> fault::Result<Box<Expr>>
         .and_then(|content| {
             grammar::ExprParser::new()
                 .parse(content.as_str())
-                .map_err(|error| Fault::from_message(format!("{error}").as_str()))
+                .map_err(|error| Fault::from_message(format_parse_error(error, &content).as_str()))
         })
 }
 
 #[cfg(test)]
 mod test {
     use crate::build::{grammar, parse_file};
-    use pretty_assertions::assert_eq;
+    use pretty_assertions::{assert_eq, assert_str_eq};
     use vfs::{MemoryFS, VfsPath};
 
     #[test]
     fn test_grammar() {
         let expr = grammar::ExprParser::new().parse("22 * 44 + 66").unwrap();
-        assert_eq!(&format!("{:?}", expr), "((22 * 44) + 66)");
+        assert_str_eq!(&format!("{:?}", expr), "((22 * 44) + 66)");
     }
 
     #[test]
@@ -73,7 +75,7 @@ mod test {
             .unwrap();
 
         let expr = parse_file(&source_file).unwrap();
-        assert_eq!(&format!("{:?}", expr), "((1 + (3 * 12)) - 4)");
+        assert_str_eq!(&format!("{:?}", expr), "((1 + (3 * 12)) - 4)");
     }
 
     #[test]
@@ -90,6 +92,13 @@ mod test {
 
         let result = parse_file(&source_file);
         assert_eq!(result.is_err(), true);
-        assert_eq!(format!("{}", result.err().unwrap()), "Invalid token at 4");
+        assert_str_eq!(
+            format!("{}", result.err().unwrap()),
+            "Invalid token at line 1:
+
+ 1 | 1 + hello
+         ^
+"
+        );
     }
 }

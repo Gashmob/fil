@@ -126,7 +126,7 @@ fn sanitize_name(name: &String) -> String {
 #[cfg(test)]
 mod test {
     use crate::new::{check_path_is_empty, sanitize_name};
-    use pretty_assertions::assert_eq;
+    use pretty_assertions::{assert_eq, assert_str_eq};
     use vfs::{MemoryFS, VfsPath};
 
     #[test]
@@ -148,13 +148,13 @@ mod test {
 
     #[test]
     fn test_sanitize_name() {
-        assert_eq!("foo", sanitize_name(&"foo".to_string()));
-        assert_eq!("foo-bar", sanitize_name(&"foo bar".to_string()));
-        assert_eq!("foo-bar", sanitize_name(&"foo-bar".to_string()));
-        assert_eq!("foo_bar", sanitize_name(&"foo_bar".to_string()));
-        assert_eq!("foo", sanitize_name(&"   foo   ".to_string()));
-        assert_eq!("foo-bar", sanitize_name(&"   foo   bar   ".to_string()));
-        assert_eq!("foo&bar", sanitize_name(&"foo&bar".to_string()));
-        assert_eq!("foo-bar", sanitize_name(&"foo*bar".to_string()));
+        assert_str_eq!("foo", sanitize_name(&"foo".to_string()));
+        assert_str_eq!("foo-bar", sanitize_name(&"foo bar".to_string()));
+        assert_str_eq!("foo-bar", sanitize_name(&"foo-bar".to_string()));
+        assert_str_eq!("foo_bar", sanitize_name(&"foo_bar".to_string()));
+        assert_str_eq!("foo", sanitize_name(&"   foo   ".to_string()));
+        assert_str_eq!("foo-bar", sanitize_name(&"   foo   bar   ".to_string()));
+        assert_str_eq!("foo&bar", sanitize_name(&"foo&bar".to_string()));
+        assert_str_eq!("foo-bar", sanitize_name(&"foo*bar".to_string()));
     }
 }
