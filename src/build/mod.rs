@@ -18,9 +18,11 @@
 mod ast;
 mod grammar;
 mod parse_error_formatter;
+mod validator;
 
 use crate::build::ast::Expr;
 use crate::build::parse_error_formatter::format_parse_error;
+use crate::build::validator::validate;
 use crate::cli::Cli;
 use crate::cli::build::CommandBuild;
 use crate::fault;
@@ -34,7 +36,11 @@ pub fn build(
     let expr = filesystem
         .join("src/main.fil")
         .map_err(|error| Fault::from_error(Box::from(error)))
-        .and_then(|main_source_file| parse_file(&main_source_file));
+        .and_then(|main_source_file| parse_file(&main_source_file))
+        .and_then(|expr| validate(&expr));
+    // TODO:
+    //  - match visitor to build IR (llvm?)
+    //  - linking into executable
 
     expr.and_then(|_| Err(Fault::from_message("Not yet implemented")))
 }
