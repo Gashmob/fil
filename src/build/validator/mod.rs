@@ -15,7 +15,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::build::ast::{Expr, Opcode};
+use crate::build::grammar::ast::{Expr, Opcode};
 use crate::fault;
 use crate::fault::Fault;
 
@@ -53,7 +53,7 @@ fn validate_operator(left: &Expr, operator: &Opcode, right: &Expr) -> fault::Res
 
 #[cfg(test)]
 mod test {
-    use crate::build::grammar;
+    use crate::build::grammar::grammar;
     use crate::build::validator::validate_expression;
     use crate::fault;
     use crate::fault::Fault;
