@@ -28,6 +28,6 @@ Term: Box<Expr> = {
     "(" <Expr> ")"
 };
 
-Num: i32 = {
-    r"[0-9]+" => i32::from_str(<>).unwrap()
+Num: u32 = {
+    r"[0-9]+" => u32::from_str(<>).unwrap()
 };

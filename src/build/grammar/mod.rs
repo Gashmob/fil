@@ -16,12 +16,13 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::build::grammar::ast::Expr;
-use crate::build::parse_error_formatter::format_parse_error;
 use crate::fault;
 use crate::fault::Fault;
+use parse_error_formatter::format_parse_error;
 
 pub mod ast;
 pub mod grammar;
+mod parse_error_formatter;
 
 pub fn parse_file(main_source_file: &vfs::path::VfsPath) -> fault::Result<Box<Expr>> {
     main_source_file

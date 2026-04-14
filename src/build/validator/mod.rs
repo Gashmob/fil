@@ -23,14 +23,14 @@ pub fn validate(expr: &Expr) -> fault::Result<()> {
     validate_expression(expr).map(|_| ())
 }
 
-fn validate_expression(expr: &Expr) -> fault::Result<i32> {
+fn validate_expression(expr: &Expr) -> fault::Result<u32> {
     match expr {
         Expr::Number(n) => Ok(*n),
         Expr::Op(l, o, r) => validate_operator(l, o, r),
     }
 }
 
-fn validate_operator(left: &Expr, operator: &Opcode, right: &Expr) -> fault::Result<i32> {
+fn validate_operator(left: &Expr, operator: &Opcode, right: &Expr) -> fault::Result<u32> {
     match operator {
         Opcode::Mul => validate_expression(right).and_then(|right_result| {
             validate_expression(left).map(|left_result| left_result * right_result)
@@ -59,7 +59,7 @@ mod test {
     use crate::fault::Fault;
     use pretty_assertions::{assert_eq, assert_str_eq};
 
-    fn parse_and_validate(input: &str) -> fault::Result<i32> {
+    fn parse_and_validate(input: &str) -> fault::Result<u32> {
         grammar::ExprParser::new()
             .parse(input)
             .map_err(|_| Fault::from_message("Failed to parse expression"))

@@ -18,7 +18,7 @@
 use std::fmt::{Debug, Formatter};
 
 pub enum Expr {
-    Number(i32),
+    Number(u32),
     Op(Box<Expr>, Opcode, Box<Expr>),
 }
 

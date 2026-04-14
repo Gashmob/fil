@@ -167,7 +167,9 @@ fn collect_lines(start: usize, end: usize, source: &String) -> Vec<LineEntry> {
 
 #[cfg(test)]
 mod test {
-    use crate::build::parse_error_formatter::{find_line, format_expected, format_parse_error};
+    use crate::build::grammar::parse_error_formatter::{
+        find_line, format_expected, format_parse_error,
+    };
     use lalrpop_util::ParseError;
     use lalrpop_util::lexer::Token;
     use pretty_assertions::{assert_eq, assert_str_eq};

@@ -16,10 +16,11 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 mod grammar;
-mod parse_error_formatter;
+mod ir;
 mod validator;
 
 use crate::build::grammar::parse_file;
+use crate::build::ir::transform_to_ir;
 use crate::build::validator::validate;
 use crate::cli::Cli;
 use crate::cli::build::CommandBuild;
@@ -35,9 +36,10 @@ pub fn build(
         .join("src/main.fil")
         .map_err(|error| Fault::from_error(Box::from(error)))
         .and_then(|main_source_file| parse_file(&main_source_file))
-        .and_then(|expr| validate(&expr));
+        .and_then(|expr| validate(&expr).map(|_| expr))
+        .and_then(|expr| transform_to_ir(&expr))
+        .map(|ir| println!("{ir}"));
     // TODO:
-    //  - match visitor to build IR (llvm?)
     //  - linking into executable
 
     expr.and_then(|_| Err(Fault::from_message("Not yet implemented")))
