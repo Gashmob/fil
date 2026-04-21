@@ -15,12 +15,10 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-mod build;
+pub mod build;
 mod new;
-#[cfg(test)]
-mod test;
 
-use crate::errors::Result;
+use crate::fault;
 use clap::builder::Styles;
 use clap::builder::styling::{AnsiColor, Style};
 use clap::{Args, FromArgMatches, Parser, Subcommand, crate_name};
@@ -73,9 +71,55 @@ pub fn parse(args: Vec<String>) -> Cli {
         .unwrap()
 }
 
-pub fn run(cli: Cli) -> Result<()> {
+pub fn run(cli: Cli) -> fault::Result<()> {
     match &cli.command {
         Command::New(n) => new::run(&cli, n, &vfs::PhysicalFS::new("/").into()),
-        Command::Build(b) => build::run(&cli, b),
+        Command::Build(b) => build::run(&cli, b, &vfs::PhysicalFS::new(".").into()),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::cli::{Command, parse};
+    use pretty_assertions::{assert_eq, assert_str_eq};
+
+    fn make_args(args: Vec<&str>) -> Vec<String> {
+        args.iter().map(|&arg| arg.parse().unwrap()).collect()
+    }
+
+    #[test]
+    fn it_parses_command_new_args() {
+        let result = parse(make_args(vec!["fil", "new", "--name", "foo"]));
+        match result.command {
+            Command::New(n) => assert_str_eq!("foo", n.name.unwrap()),
+            Command::Build(_) => panic!("Should have parsed command new"),
+        }
+    }
+
+    #[test]
+    fn it_parses_command_new_args_default() {
+        let result = parse(make_args(vec!["fil", "new"]));
+        match result.command {
+            Command::New(n) => assert_eq!(None, n.name),
+            Command::Build(_) => panic!("Should have parsed command new"),
+        }
+    }
+
+    #[test]
+    fn it_parses_command_build_args() {
+        let result = parse(make_args(vec!["fil", "build", "-o", "dist"]));
+        match result.command {
+            Command::New(_) => panic!("Should have parsed command build"),
+            Command::Build(b) => assert_str_eq!("dist", b.out_dir.unwrap()),
+        }
+    }
+
+    #[test]
+    fn it_parses_command_build_args_default() {
+        let result = parse(make_args(vec!["fil", "build"]));
+        match result.command {
+            Command::New(_) => panic!("Should have parsed command build"),
+            Command::Build(b) => assert_str_eq!("build", b.out_dir.unwrap()),
+        }
     }
 }

@@ -1,4 +1,11 @@
-{ rustPlatform, lib }:
+{
+  rustPlatform,
+  lib,
+  libllvm,
+  libffi,
+  libxml2,
+  zlib,
+}:
 
 rustPlatform.buildRustPackage rec {
   name = "fil";
@@ -7,6 +14,13 @@ rustPlatform.buildRustPackage rec {
   cargoDeps = rustPlatform.importCargoLock {
     lockFile = "${src}/Cargo.lock";
   };
+
+  nativeBuildInputs = [ libllvm ];
+  buildInputs = [
+    libffi
+    libxml2
+    zlib
+  ];
 
   doCheck = true;
   checkPhase = ''

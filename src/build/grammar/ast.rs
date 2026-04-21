@@ -15,21 +15,36 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::errors::{GenericError, NotImplementedError};
-use pretty_assertions::assert_eq;
+use std::fmt::{Debug, Formatter};
 
-#[test]
-fn it_stores_message() {
-    assert_eq!(
-        "My error message",
-        GenericError::new("My error message").to_string()
-    );
+pub enum Expr {
+    Number(u32),
+    Op(Box<Expr>, Opcode, Box<Expr>),
 }
 
-#[test]
-fn it_tells_feature_is_not_implemented() {
-    assert_eq!(
-        "foo is not yet implemented",
-        NotImplementedError::new("foo").to_string()
-    );
+pub enum Opcode {
+    Mul,
+    Div,
+    Add,
+    Sub,
+}
+
+impl Debug for Expr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expr::Number(n) => write!(f, "{n:?}"),
+            Expr::Op(l, op, r) => write!(f, "({l:?} {op:?} {r:?})"),
+        }
+    }
+}
+
+impl Debug for Opcode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Opcode::Mul => write!(f, "*"),
+            Opcode::Div => write!(f, "/"),
+            Opcode::Add => write!(f, "+"),
+            Opcode::Sub => write!(f, "-"),
+        }
+    }
 }

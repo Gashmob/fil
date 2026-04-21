@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     treefmt-nix = {
       url = "github:numtide/treefmt-nix/28b19c5844cc6e2257801d43f2772a4b4c050a1b";
@@ -22,9 +22,14 @@
       eachSystem = nixpkgs.lib.genAttrs (import systems);
       pkgs = eachSystem (system: import nixpkgs { inherit system; });
 
-      fil-version = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).package.version;
+      fil-version = (fromTOML (builtins.readFile ./Cargo.toml)).package.version;
 
-      fil-package = eachSystem (system: pkgs.${system}.callPackage ./fil.nix { });
+      fil-package = eachSystem (
+        system:
+        pkgs.${system}.callPackage ./fil.nix {
+          libllvm = pkgs.${system}.llvmPackages_22.libllvm;
+        }
+      );
       rpm-package = eachSystem (
         system:
         pkgs.${system}.callPackage ./tools/package/rpm.nix {
@@ -56,11 +61,21 @@
           packages = with pkgs.${system}; [
             git
             rustup
+            llvmPackages_22.libllvm
+            libffi
+            libxml2
             (import ./tools/nix/treefmt.nix {
               inherit treefmt-nix;
               pkgs = pkgs.${system};
             })
           ];
+
+          LD_LIBRARY_PATH =
+            with pkgs.${system};
+            lib.makeLibraryPath [
+              libffi
+              stdenv.cc.cc
+            ];
 
           shellHook = ''
             export ROOT_DIR=$(git rev-parse --show-toplevel)

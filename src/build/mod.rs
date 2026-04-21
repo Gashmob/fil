@@ -15,26 +15,32 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::build::build;
+mod grammar;
+mod ir;
+mod validator;
+
+use crate::build::grammar::parse_file;
+use crate::build::ir::transform_to_ir;
+use crate::build::validator::validate;
 use crate::cli::Cli;
+use crate::cli::build::CommandBuild;
 use crate::fault;
-use clap::Args;
+use crate::fault::Fault;
 
-#[derive(Args)]
-pub struct CommandBuild {
-    #[arg(
-        short,
-        long,
-        default_value = "build",
-        help = "Build destination directory"
-    )]
-    pub out_dir: Option<String>,
-}
-
-pub fn run(
-    cli: &Cli,
-    command: &CommandBuild,
+pub fn build(
+    _cli: &Cli,
+    _command: &CommandBuild,
     filesystem: &vfs::path::VfsPath,
 ) -> fault::Result<()> {
-    build(cli, command, filesystem)
+    let expr = filesystem
+        .join("src/main.fil")
+        .map_err(|error| Fault::from_error(Box::from(error)))
+        .and_then(|main_source_file| parse_file(&main_source_file))
+        .and_then(|expr| validate(&expr).map(|_| expr))
+        .and_then(|expr| transform_to_ir(&expr))
+        .map(|ir| println!("{ir}"));
+    // TODO:
+    //  - linking into executable
+
+    expr.and_then(|_| Err(Fault::from_message("Not yet implemented")))
 }

@@ -16,10 +16,19 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use std::env;
+use std::process::ExitCode;
 
+mod build;
 mod cli;
-mod errors;
+mod fault;
+mod new;
 
-fn main() -> Result<(), String> {
-    cli::run(cli::parse(env::args().collect())).map_err(|err| err.to_string())
+fn main() -> ExitCode {
+    match cli::run(cli::parse(env::args().collect())) {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("{err}");
+            ExitCode::FAILURE
+        }
+    }
 }

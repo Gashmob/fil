@@ -15,26 +15,11 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::build::build;
-use crate::cli::Cli;
-use crate::fault;
-use clap::Args;
-
-#[derive(Args)]
-pub struct CommandBuild {
-    #[arg(
-        short,
-        long,
-        default_value = "build",
-        help = "Build destination directory"
-    )]
-    pub out_dir: Option<String>,
-}
-
-pub fn run(
-    cli: &Cli,
-    command: &CommandBuild,
-    filesystem: &vfs::path::VfsPath,
-) -> fault::Result<()> {
-    build(cli, command, filesystem)
+fn main() {
+    lalrpop::Configuration::new()
+        .set_in_dir("./src")
+        .set_out_dir("./src")
+        .force_build(true)
+        .process()
+        .unwrap()
 }

@@ -16,9 +16,11 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::cli::Cli;
-use crate::errors::{GenericError, Result};
+use crate::fault;
+use crate::fault::Fault;
+use crate::new::create_project;
 use clap::Args;
-use std::process;
+use cliclack::ProgressBar;
 
 #[derive(Args)]
 pub struct CommandNew {
@@ -34,19 +36,58 @@ pub struct CommandNew {
     pub git: Option<bool>,
 }
 
-pub fn run(_cli: &Cli, command: &CommandNew, filesystem: &vfs::path::VfsPath) -> Result<()> {
-    cliclack::intro(console::style(" New project ").on_green().black())?;
+pub fn run(_cli: &Cli, command: &CommandNew, filesystem: &vfs::path::VfsPath) -> fault::Result<()> {
+    cliclack::intro(console::style(" New project ").on_green().black())
+        .and_then(|_| cliclack::log::success("Let's create an awesome project 🤘"))
+        .map_err(|error| Fault::from_error(Box::from(error)))
+        .map(|_| {
+            let spinner = cliclack::spinner();
+            spinner.start("Initializing the project");
+            spinner
+        })
+        .and_then(|spinner| get_name(&command).map(|name| (spinner, name)))
+        .and_then(|(spinner, name)| get_git(&command).map(|git| (spinner, name, git)))
+        .and_then(|(spinner, name, git)| {
+            create_project(&name, &git, &filesystem).map(|_| (spinner, name))
+        })
+        .and_then(|(spinner, name): (ProgressBar, String)| {
+            spinner.stop("Done!");
 
-    cliclack::log::success("Let's create an awesome project 🤘")?;
+            cliclack::note(
+                "Project created! 🚀 ",
+                format!(
+                    "{}\n{}{}\n",
+                    console::style("Next steps:").bold(),
+                    if name == "." {
+                        String::new()
+                    } else {
+                        console::style(format!("cd {name}\n")).dim().to_string()
+                    },
+                    "Enjoy!"
+                ),
+            )
+            .map_err(|error| Fault::from_error(Box::from(error)))
+        })
+        .and_then(|_| {
+            cliclack::outro(format!(
+                "Got problems? {}",
+                console::style("https://github.com/Gashmob/fil/issues/new/choose")
+                    .yellow()
+                    .underlined()
+            ))
+            .map_err(|error| Fault::from_error(Box::from(error)))
+        })
+}
 
-    let name = if let Some(given_name) = &command.name {
+fn get_name(command: &CommandNew) -> fault::Result<String> {
+    if let Some(given_name) = &command.name {
         cliclack::log::step(format!(
             "Project will be created with name: {}",
             console::style(given_name).bold()
-        ))?;
-        given_name
+        ))
+        .map(|_| given_name.clone())
     } else {
-        &cliclack::input("How do you want to call it?")
+        cliclack::input("How do you want to call it?")
             .placeholder("blazing-fast-forward")
             .validate(|input: &String| {
                 if input.is_empty() {
@@ -55,137 +96,82 @@ pub fn run(_cli: &Cli, command: &CommandNew, filesystem: &vfs::path::VfsPath) ->
                     Ok(())
                 }
             })
-            .interact()?
-    };
+            .interact()
+    }
+    .map_err(|error| Fault::from_error(Box::from(error)))
+}
 
-    let git = if let Some(given_git) = &command.git {
-        if *given_git {
+fn get_git(command: &CommandNew) -> fault::Result<bool> {
+    if let Some(given_git) = command.git {
+        if given_git {
             cliclack::log::step(format!(
                 "{} will be called",
                 console::style("git init").bold()
-            ))?;
+            ))
+        } else {
+            Ok(())
         }
-        given_git
+        .map(|_| given_git.clone())
     } else {
-        &cliclack::confirm("Do you want to init git?").interact()?
-    };
-
-    let spinner = cliclack::spinner();
-    spinner.start("Initializing the project");
-    create_project(name, git, &filesystem).and_then(|_| {
-        spinner.stop("Done!");
-
-        cliclack::note(
-            "Project created! 🚀 ",
-            format!(
-                "{}\n{}{}\n",
-                console::style("Next steps:").bold(),
-                if name == "." {
-                    String::new()
-                } else {
-                    console::style(format!("cd {name}\n")).dim().to_string()
-                },
-                "Enjoy!"
-            ),
-        )?;
-
-        cliclack::outro(format!(
-            "Got problems? {}",
-            console::style("https://github.com/Gashmob/fil/issues/new/choose")
-                .yellow()
-                .underlined()
-        ))?;
-        Ok(())
-    })
-}
-
-fn create_project(name: &String, git: &bool, filesystem: &vfs::path::VfsPath) -> Result<()> {
-    let name = sanitize_name(name);
-    let path = if name.starts_with("/") {
-        filesystem.root().join(&name)?
-    } else {
-        filesystem
-            .join(std::env::current_dir()?.to_str().unwrap())?
-            .join(&name)?
-    };
-    let name = if name.contains("/") {
-        path.filename()
-    } else {
-        name.clone()
-    };
-
-    check_path(&path)
-        .and_then(|_| {
-            path.create_dir_all()
-                .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-        })
-        .and_then(|_| {
-            path.join("package.toml")
-                .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                .and_then(|file| {
-                    file.create_file()
-                        .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                })
-                .and_then(|mut file_stream| {
-                    write!(file_stream, "[package]\nname = {}", name)
-                        .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                })
-        })
-        .and_then(|_| {
-            if *git {
-                process::Command::new("git")
-                    .args(vec!["init", path.as_str()])
-                    .output()
-                    .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                    .and(Ok(()))
-            } else {
-                Ok(())
-            }
-        })
-}
-
-fn check_path(path: &vfs::path::VfsPath) -> Result<()> {
-    path.exists()
-        .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-        .and_then(|exists| {
-            if exists {
-                path.read_dir()
-                    .map_err(|err| GenericError::new(err.to_string().as_str()).into())
-                    .and_then(|read_dir| {
-                        if read_dir.count() > 0 {
-                            Err(GenericError::new(
-                                format!("Directory {} is not empty", path.as_str()).as_str(),
-                            )
-                            .into())
-                        } else {
-                            Ok(())
-                        }
-                    })
-            } else {
-                Ok(())
-            }
-        })
-}
-
-fn sanitize_name(name: &String) -> String {
-    let parts: Vec<_> = name.trim().split_whitespace().collect();
-    parts.join("-").replace("*", "-")
+        cliclack::confirm("Do you want to init git?").interact()
+    }
+    .map_err(|error| Fault::from_error(Box::from(error)))
 }
 
 #[cfg(test)]
 mod test {
-    use crate::cli::new::sanitize_name;
-    use pretty_assertions::assert_eq;
+    use crate::cli::new::CommandNew;
+    use crate::cli::{Cli, Command, new};
+    use pretty_assertions::{assert_eq, assert_str_eq};
+    use std::io::Read;
+    use vfs::{MemoryFS, VfsPath};
+
+    fn random_name() -> String {
+        format!("project_{}", rand::random::<u64>())
+    }
+
+    fn run_new(path: &VfsPath) {
+        let result = new::run(
+            &Cli {
+                config: "".to_string(),
+                command: Command::New(CommandNew {
+                    name: Some(path.as_str().to_string()),
+                    git: Some(false),
+                }),
+            },
+            &CommandNew {
+                name: Some(path.as_str().to_string()),
+                git: Some(false),
+            },
+            &path,
+        );
+        assert_eq!(true, result.is_ok());
+    }
 
     #[test]
-    fn test_sanitize_name() {
-        assert_eq!("foo", sanitize_name(&"foo".to_string()));
-        assert_eq!("foo-bar", sanitize_name(&"foo bar".to_string()));
-        assert_eq!("foo-bar", sanitize_name(&"foo-bar".to_string()));
-        assert_eq!("foo_bar", sanitize_name(&"foo_bar".to_string()));
-        assert_eq!("foo", sanitize_name(&"   foo   ".to_string()));
-        assert_eq!("foo-bar", sanitize_name(&"   foo   bar   ".to_string()));
-        assert_eq!("foo&bar", sanitize_name(&"foo&bar".to_string()));
-        assert_eq!("foo-bar", sanitize_name(&"foo*bar".to_string()));
+    fn it_creates_project_dir() {
+        let root = VfsPath::new(MemoryFS::new());
+        let name = random_name();
+        let path = root.join(format!("/tmp/{}", name)).unwrap();
+        run_new(&path);
+
+        assert_eq!(true, path.is_dir().unwrap());
+        let content: Vec<_> = path.read_dir().unwrap().collect();
+        assert_eq!(vec![path.join("package.toml").unwrap()], content);
+        let mut package_content = String::new();
+        path.join("package.toml")
+            .unwrap()
+            .open_file()
+            .unwrap()
+            .read_to_string(&mut package_content)
+            .unwrap();
+        assert_str_eq!(
+            format!(
+                "[package]
+name = {}",
+                name
+            ),
+            package_content
+        );
     }
 }
